@@ -1,0 +1,121 @@
+aList = new ArrayList<IvrDetailDataBean>();
+// httpServletRequest Encoding을 UTF-8으로 설정
+request.setCharacterEncoding("utf-8");
+// 워크북 생성
+        SXSSFWorkbook workbook = new SXSSFWorkbook(10000);
+        int iCnt = 0;
+        try {
+            final int rowcount = 20000; //분할 row 수
+            int SheetCnt= (int) Math.ceil((double)totCnt/rowcount);             // 시트갯수
+
+            String [] strDownExcelName = new String[SheetCnt];
+
+            // 워크시트 생성
+            final SXSSFSheet[] sheet = new SXSSFSheet[SheetCnt];
+            // 행 생성
+            SXSSFRow[] row = new SXSSFRow[SheetCnt];
+            // 쎌 생성
+            SXSSFCell cell = null;
+            // 셀 스타일
+            final CellStyle cellStyle = workbook.createCellStyle();
+            cellStyle.setAlignment(XSSFCellStyle.ALIGN_CENTER);   // 가운데 정렬
+            cellStyle.setBorderBottom(XSSFCellStyle.BORDER_THIN); // border
+            cellStyle.setBorderLeft(XSSFCellStyle.BORDER_THIN);
+            cellStyle.setBorderRight(XSSFCellStyle.BORDER_THIN);
+            cellStyle.setBorderTop(XSSFCellStyle.BORDER_THIN);
+
+            final CellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setAlignment(XSSFCellStyle.ALIGN_CENTER);
+            headerStyle.setBorderBottom(XSSFCellStyle.BORDER_THIN);
+            headerStyle.setBorderLeft(XSSFCellStyle.BORDER_THIN);
+            headerStyle.setBorderRight(XSSFCellStyle.BORDER_THIN);
+            headerStyle.setBorderTop(XSSFCellStyle.BORDER_THIN);
+            headerStyle.setFillForegroundColor(HSSFColor.GREY_25_PERCENT.index);    //배경
+            headerStyle.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);                //배경
+            XSSFFont font = (XSSFFont)workbook.createFont();                        //폰트 굵기
+            font.setBold(true);
+            headerStyle.setFont(font);
+
+            for(int m=0; m < SheetCnt ;m++){
+                strDownExcelName[m]="그룹_걸은전화상테_엑셀_"+m; //시트 이름
+
+                sheet[m] = (SXSSFSheet)workbook.createSheet(strDownExcelName[m]);
+
+                if(m==0){
+                    row[m] = (SXSSFRow)sheet[m].createRow(0);
+
+                    cell = (SXSSFCell)row[m].createCell(0);             cell.setCellValue("번호");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(1);             cell.setCellValue("아이디");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(2);             cell.setCellValue("상담원명");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(3);             cell.setCellValue("내선번호");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(4);             cell.setCellValue("일자");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(5);             cell.setCellValue("통화시작");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(6);             cell.setCellValue("통화종료");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(7);             cell.setCellValue("통화시간");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(8);             cell.setCellValue("그룹");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(9);                cell.setCellValue("대표번호");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(10);             cell.setCellValue("수신자번호");            cell.setCellStyle(headerStyle);
+                    cell = (SXSSFCell)row[m].createCell(11);             cell.setCellValue("상태");            cell.setCellStyle(headerStyle);
+                }
+
+                // 셀별 위드 정하기 헤더 그리기
+                sheet[m].setColumnWidth(0,2800);
+                sheet[m].setColumnWidth(1,3500);
+                sheet[m].setColumnWidth(2,3500);
+                sheet[m].setColumnWidth(3,3500);
+                sheet[m].setColumnWidth(4,3500);
+                sheet[m].setColumnWidth(5,3000);
+                sheet[m].setColumnWidth(6,3000);
+                sheet[m].setColumnWidth(7,3000);
+                sheet[m].setColumnWidth(8,10000);
+                sheet[m].setColumnWidth(9,3500);
+                sheet[m].setColumnWidth(10,3500);
+                sheet[m].setColumnWidth(11,3500);
+            }
+
+            String strExcelName = "attachment; filename=엑셀"+ fileNameDate.format(new Date()) +".xlsx";
+
+            response.reset();
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", new String(strExcelName.getBytes("KS_C_5601-1987"), "8859_1"));
+            response.setHeader("Set-Cookie", "fileDownload=true; path=/");
+
+            List<OBDetailDTO> list = obDetailDAO.getAllOBDetailExcel(request, response, strStartDay, strEndDay, strAgtId, strResult);
+
+            int no = list.size();
+            int rowNo = 0;
+            for (OBDetailDTO item : list) {
+                SXSSFCell cellD = null;
+                SXSSFRow rowD = null;
+                rowNo++;
+                int SheetCntD = (int) Math.ceil((double)rowNo/rowcount);             // 시트갯수
+                if(SheetCntD == 1){
+                    rowD = (SXSSFRow) sheet[SheetCntD-1].createRow(rowNo);
+                }else{
+                    rowD = (SXSSFRow) sheet[SheetCntD-1].createRow((rowNo)-((SheetCntD-1)*rowcount)-1);
+                }
+
+                cellD = (SXSSFCell)rowD.createCell(0);    cellD.setCellValue(String.valueOf(no--));    cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(1);    cellD.setCellValue(item.getAgtId());        cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(2);    cellD.setCellValue(item.getAgtName());        cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(3);    cellD.setCellValue(item.getAgtExt());        cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(4);    cellD.setCellValue(item.getAgtInday());        cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(5);    cellD.setCellValue(item.getAgtSTime());        cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(6);    cellD.setCellValue(item.getAgtETime());        cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(7);    cellD.setCellValue(SecToTime.secToTime(item.getAgtUTime()));        cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(8);
+                cellD.setCellValue("[" + item.getNgName1() + "]-[" + item.getNgName2() + "]-[" + item.getNgName3() + "]");        cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(9);    cellD.setCellValue(item.getIvrTel());        cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(10);    cellD.setCellValue(item.getCustomerTel());    cellD.setCellStyle(cellStyle);
+                cellD = (SXSSFCell)rowD.createCell(11);    cellD.setCellValue(item.getNcName());        cellD.setCellStyle(cellStyle);
+            }
+
+            ServletOutputStream out = response.getOutputStream();
+            out.flush();
+
+            workbook.write(out);//준비된 정보를 엑셀 포멧에 맞게 작성
+            out.flush();
+            out.close();
+          
+          
